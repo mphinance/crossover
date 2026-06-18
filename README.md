@@ -57,6 +57,20 @@ you're aiming at, which is why high savings rates collapse the timeline so fast.
 - **A field guide to FIRE** — plain-language definitions of every variant, plus
   the big sequence-of-returns caveat.
 
+## A look inside
+
+**Which FIRE are you chasing?** One engine, five finish lines, with a tap-to-compare strip.
+
+![The FIRE-style switcher: Standard, Lean, Fat, Coast, and Barista, with a compare strip and the crossover chart](screenshots/variants.png)
+
+**The "one more year" trap.** What each extra working year past your crossover buys in sustainable spending and cushion.
+
+![The one-more-year table showing diminishing-feeling buffer growth above baseline spending](screenshots/onemore.png)
+
+**Today's dollars or future dollars.** Flip the toggle and every figure re-inflates, including the net-worth target, which goes from a flat line to a rising one.
+
+![The net-worth chart and one-more-year table restated in inflated future dollars](screenshots/future-dollars.png)
+
 ## The math
 
 The core figures are **real** (inflation-adjusted), so they're in today's
