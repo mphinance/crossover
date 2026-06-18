@@ -14,7 +14,7 @@ export default function Tooltip({ label = 'More info', children }) {
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="ml-1 grid h-4 w-4 place-items-center rounded-full bg-slate-200 text-[10px] font-bold text-slatey hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-target"
+        className="ml-1 grid h-4 w-4 place-items-center rounded-full bg-mist text-[10px] font-bold text-slatey hover:bg-rule focus:outline-none focus:ring-2 focus:ring-target"
       >
         ?
       </button>
@@ -22,7 +22,7 @@ export default function Tooltip({ label = 'More info', children }) {
         <span
           id={id}
           role="tooltip"
-          className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-lg bg-ink px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
+          className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-lg bg-ink px-3 py-2 text-xs leading-relaxed text-paper shadow-lg"
         >
           {children}
         </span>

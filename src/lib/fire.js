@@ -13,6 +13,12 @@ export const DEFAULTS = Object.freeze({
   currentNetWorth: 0,
   realReturn: 0.05,
   withdrawalRate: 0.04,
+  // Extra annual income (a side hustle) that gets invested on top of savings.
+  sideHustle: 0,
+  // Used only by the Coast/Barista variants and the future-dollars view.
+  currentAge: 35,
+  retirementAge: 65,
+  inflation: 0.03,
 })
 
 export function clamp(x, lo, hi) {
@@ -36,6 +42,14 @@ export function validate(raw) {
   const realReturn = Number(raw.realReturn)
   const withdrawalRate = Number(raw.withdrawalRate)
   let savingsRate = Number(raw.savingsRate)
+
+  // Secondary inputs are forgiving: fall back to defaults rather than block the
+  // whole calculation, since they only steer the variants and the display view.
+  const num = (v, fallback) => (Number.isFinite(Number(v)) ? Number(v) : fallback)
+  const sideHustle = Math.max(0, num(raw.sideHustle, DEFAULTS.sideHustle))
+  const currentAge = clamp(num(raw.currentAge, DEFAULTS.currentAge), 0, 120)
+  const retirementAge = clamp(num(raw.retirementAge, DEFAULTS.retirementAge), 0, 120)
+  const inflation = Math.max(0, num(raw.inflation, DEFAULTS.inflation))
 
   if (!Number.isFinite(takeHomePay) || takeHomePay <= 0) {
     errors.push({ field: 'takeHomePay', message: 'Take-home pay must be a positive number.' })
@@ -63,7 +77,17 @@ export function validate(raw) {
   return {
     valid: errors.length === 0,
     errors,
-    inputs: { takeHomePay, savingsRate, currentNetWorth, realReturn, withdrawalRate },
+    inputs: {
+      takeHomePay,
+      savingsRate,
+      currentNetWorth,
+      realReturn,
+      withdrawalRate,
+      sideHustle,
+      currentAge,
+      retirementAge,
+      inflation,
+    },
   }
 }
 
@@ -102,13 +126,15 @@ export function yearsToFI({ fiTarget, currentNetWorth, annualSavings, realReturn
 // The full derived model from validated inputs. Everything UI needs.
 export function computeModel(raw) {
   const { valid, errors, inputs } = validate(raw)
-  const { takeHomePay, savingsRate, currentNetWorth, realReturn, withdrawalRate } = inputs
+  const { takeHomePay, savingsRate, currentNetWorth, realReturn, withdrawalRate, sideHustle } = inputs
 
   if (!valid) {
     return { valid, errors, inputs }
   }
 
-  const annualSavings = takeHomePay * savingsRate
+  // Side-hustle income is invested on top of the savings-rate contribution.
+  const payrollSavings = takeHomePay * savingsRate
+  const annualSavings = payrollSavings + sideHustle
   const annualSpending = takeHomePay * (1 - savingsRate)
   const fiTarget = annualSpending / withdrawalRate // 4% SWR => 25x spending
 
@@ -120,6 +146,8 @@ export function computeModel(raw) {
     valid: true,
     errors: [],
     inputs,
+    payrollSavings,
+    sideHustle,
     annualSavings,
     annualSpending,
     fiTarget,
@@ -127,6 +155,114 @@ export function computeModel(raw) {
     reachable,
     alreadyFI,
   }
+}
+
+// --- FIRE variants ---------------------------------------------------------
+//
+// The same engine, re-pointed at different finish lines. Each variant answers
+// "if THIS were your definition of enough, when do you get there?" These are
+// deliberately simple, opinionated takes on well-known FIRE flavors.
+
+export const LEAN_MULT = 0.7 // a leaner version of your own life
+export const FAT_MULT = 1.6 // a roomier one
+
+export function computeVariants(raw) {
+  const model = computeModel(raw)
+  if (!model.valid) return []
+  const { annualSpending, annualSavings, sideHustle, inputs } = model
+  const { currentNetWorth, realReturn, withdrawalRate, currentAge, retirementAge } = inputs
+
+  const solve = (fiTarget) => {
+    const t = yearsToFI({ fiTarget, currentNetWorth, annualSavings, realReturn })
+    return { fiTarget, yearsToFI: t, reachable: Number.isFinite(t), alreadyFI: Number.isFinite(t) && t <= 1e-9 }
+  }
+
+  // Standard / Lean / Fat: scale the spending you must cover, keep the engine.
+  const standard = {
+    key: 'standard',
+    label: 'Standard',
+    blurb: 'Cover all of today’s spending from your portfolio. The classic 25x.',
+    spending: annualSpending,
+    ...solve(annualSpending / withdrawalRate),
+  }
+  const lean = {
+    key: 'lean',
+    label: 'Lean',
+    blurb: `A trimmer life: about ${Math.round(LEAN_MULT * 100)}% of today’s spending. Less to cover, sooner you’re free.`,
+    spending: annualSpending * LEAN_MULT,
+    ...solve((annualSpending * LEAN_MULT) / withdrawalRate),
+  }
+  const fat = {
+    key: 'fat',
+    label: 'Fat',
+    blurb: `A roomier life: about ${Math.round(FAT_MULT * 100)}% of today’s spending. More comfort, longer climb.`,
+    spending: annualSpending * FAT_MULT,
+    ...solve((annualSpending * FAT_MULT) / withdrawalRate),
+  }
+
+  // Coast: the pile you need invested NOW so it grows into the full FI number
+  // by traditional retirement age, with zero further contributions.
+  const yearsToRetire = Math.max(0, retirementAge - currentAge)
+  const fullTarget = annualSpending / withdrawalRate
+  const coastNumber = fullTarget / Math.pow(1 + realReturn, yearsToRetire)
+  const coastSolve = yearsToFI({ fiTarget: coastNumber, currentNetWorth, annualSavings, realReturn })
+  const coast = {
+    key: 'coast',
+    label: 'Coast',
+    blurb: `Hit this once and you can stop saving entirely — it drifts up to your full number by age ${retirementAge}.`,
+    coast: true,
+    spending: annualSpending,
+    fiTarget: coastNumber,
+    yearsToFI: coastSolve,
+    reachable: Number.isFinite(coastSolve),
+    alreadyFI: Number.isFinite(coastSolve) && coastSolve <= 1e-9,
+    yearsToRetire,
+  }
+
+  // Barista: a part-time / side income covers part of spending, so the
+  // portfolio only has to fund the rest. Uses your side-hustle figure.
+  const baristaCovered = Math.max(0, annualSpending - sideHustle)
+  const barista = {
+    key: 'barista',
+    label: 'Barista',
+    blurb:
+      sideHustle > 0
+        ? 'A part-time income (your side hustle) covers part of spending; the portfolio funds the rest.'
+        : 'Add a side-hustle income above, and Barista FIRE shows the smaller number you’d need.',
+    barista: true,
+    spending: baristaCovered,
+    coveredBySide: sideHustle,
+    ...solve(baristaCovered / withdrawalRate),
+  }
+
+  return [standard, lean, fat, coast, barista]
+}
+
+// --- One More Year ---------------------------------------------------------
+//
+// Past the crossover, each extra working year buys a bigger portfolio, which
+// buys more sustainable annual spending. This quantifies the marginal payoff
+// (and its diminishing returns) of not pulling the trigger yet.
+export function oneMoreYearTable(model, offsets = [0, 1, 2, 3, 5]) {
+  if (!model.valid || !model.reachable) return []
+  const { annualSavings, annualSpending, fiTarget, yearsToFI: t, inputs } = model
+  const { currentNetWorth, realReturn, withdrawalRate } = inputs
+
+  const rows = offsets.map((off) => {
+    const years = t + off
+    const netWorth = futureValue(currentNetWorth, annualSavings, realReturn, years)
+    const sustainableSpend = netWorth * withdrawalRate
+    return {
+      offset: off,
+      years,
+      netWorth,
+      sustainableSpend,
+      // Cushion above the bare FI number, as a share of baseline spending.
+      bufferPct: annualSpending > 0 ? (sustainableSpend - annualSpending) / annualSpending : 0,
+      extraVsFiTarget: netWorth - fiTarget,
+    }
+  })
+  return rows
 }
 
 // Build the time series the charts consume. One row per year, 0..horizon.
@@ -170,6 +306,13 @@ export function referenceTable({ realReturn = DEFAULTS.realReturn, withdrawalRat
     rows.push({ savingsRatePct: pct, savingsRate: s, years: t })
   }
   return rows
+}
+
+// Inflate a real (today's-dollars) figure to nominal (future) dollars at a
+// given year. Used only by the display toggle — never by the FI math itself.
+export function toNominal(realValue, years, inflation) {
+  if (!Number.isFinite(realValue) || !Number.isFinite(years)) return realValue
+  return realValue * Math.pow(1 + inflation, years)
 }
 
 // Add `years` (possibly fractional) to a base year -> target calendar year.
