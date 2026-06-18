@@ -14,12 +14,63 @@ body,
 
 body {
   margin: 0;
-  background: #f8fafc;
-  color: #0f172a;
+  /* The leather desk: a warm wash with a faint paper grain. */
+  background-color: #e0d0ad;
+  background-image:
+    radial-gradient(ellipse at top, rgba(255, 250, 235, 0.5), transparent 60%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(120, 90, 50, 0.025) 0,
+      rgba(120, 90, 50, 0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  color: #2b2118;
+  font-family: 'Spectral', Georgia, Cambria, 'Times New Roman', serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Range input styling, kept simple and accessible. */
+/* Cards that should read as a sheet of ruled diary paper. */
+.paper-ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 31px,
+    rgba(168, 140, 90, 0.16) 31px,
+    rgba(168, 140, 90, 0.16) 32px
+  );
+}
+
+/* The red margin line down the left edge of a notebook page. */
+.paper-margin {
+  position: relative;
+}
+.paper-margin::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2.25rem;
+  width: 1px;
+  background: rgba(185, 84, 74, 0.35);
+  pointer-events: none;
+}
+
+/* A handwritten margin scrawl, slightly off-kilter like a real annotation. */
+.scrawl {
+  font-family: 'Caveat', 'Bradley Hand', cursive;
+  transform: rotate(-1.5deg);
+}
+
+/* Range input styling — a sepia accent. */
 input[type='range'] {
-  accent-color: #6366f1;
+  accent-color: #2f5d62;
+}
+
+/* Recharts tooltip: warm it up to match the paper. */
+.recharts-default-tooltip {
+  border-radius: 0.5rem !important;
+  border: 1px solid #d8c39a !important;
+  background: #f7efdc !important;
+  box-shadow: 0 6px 16px -8px rgba(60, 40, 20, 0.35) !important;
 }

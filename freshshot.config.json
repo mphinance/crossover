@@ -1,0 +1,14 @@
+{
+  "_comment": "Run a local production build first (npm run build && npm run preview), then `npx freshshot` to refresh the README hero shot.",
+  "baseUrl": "http://localhost:4174",
+  "outDir": "screenshots",
+  "viewport": { "width": 1280, "height": 760 },
+  "deviceScaleFactor": 2,
+  "shots": [
+    {
+      "name": "hero",
+      "steps": [{ "goto": "/?p=75000&s=0.55&w=40000&h=8000&r=0.05&d=0.04" }],
+      "screenshot": { "fullPage": false, "animations": "disabled" }
+    }
+  ]
+}

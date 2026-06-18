@@ -7,7 +7,7 @@ export default function ScenarioComparison({ inputs, scenarios, onSave, onRemove
   const canSave = scenarios.length < 3
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-card sm:p-6">
+    <section className="rounded-2xl bg-paper p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-ink">Compare scenarios</h2>
         <button
@@ -17,17 +17,18 @@ export default function ScenarioComparison({ inputs, scenarios, onSave, onRemove
             const name = window.prompt('Name this scenario (e.g. "cut $300/mo"):')
             if (name) onSave(name.trim() || `Scenario ${scenarios.length + 1}`)
           }}
-          className="rounded-lg bg-target px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-target px-3 py-1.5 text-sm font-medium text-paper shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           + Save current
         </button>
       </div>
       <p className="mt-1 text-sm text-slatey">
         Snapshot a setup, tweak your inputs, and see the trade-off. Up to three.
+        Always in today's dollars, for a clean comparison.
       </p>
 
       {scenarios.length === 0 ? (
-        <p className="mt-4 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slatey">
+        <p className="mt-4 rounded-xl border border-dashed border-rule p-4 text-sm text-slatey">
           No saved scenarios yet. Save your current numbers to start comparing.
         </p>
       ) : (
@@ -35,7 +36,7 @@ export default function ScenarioComparison({ inputs, scenarios, onSave, onRemove
           {scenarios.map((sc) => {
             const m = computeModel(sc.inputs)
             return (
-              <div key={sc.id} className="rounded-xl border border-slate-200 p-4">
+              <div key={sc.id} className="rounded-xl border border-rule bg-parchment/40 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold text-ink">{sc.name}</p>
                   <button

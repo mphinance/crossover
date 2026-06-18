@@ -10,6 +10,10 @@ const KEYS = {
   w: 'currentNetWorth',
   r: 'realReturn',
   d: 'withdrawalRate',
+  h: 'sideHustle',
+  a: 'currentAge',
+  g: 'retirementAge',
+  i: 'inflation',
 }
 const INV = Object.fromEntries(Object.entries(KEYS).map(([k, v]) => [v, k]))
 

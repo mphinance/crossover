@@ -5,6 +5,9 @@ import {
   futureValue,
   referenceTable,
   buildSeries,
+  computeVariants,
+  oneMoreYearTable,
+  toNominal,
   DEFAULTS,
   clamp,
 } from './fire.js'
@@ -137,6 +140,83 @@ describe('crossover series consistency', () => {
     const series = buildSeries(m)
     const last = series[series.length - 1]
     expect(last.netWorth).toBeGreaterThanOrEqual(m.fiTarget)
+  })
+})
+
+describe('side-hustle income', () => {
+  it('defaults to zero and leaves the timeline unchanged', () => {
+    const without = computeModel({ ...base })
+    const withZero = computeModel({ ...base, sideHustle: 0 })
+    expect(withZero.yearsToFI).toBeCloseTo(without.yearsToFI, 9)
+  })
+  it('adds to annual savings and shortens the path', () => {
+    const plain = computeModel({ ...base })
+    const hustling = computeModel({ ...base, sideHustle: 12000 })
+    expect(hustling.annualSavings).toBe(plain.annualSavings + 12000)
+    expect(hustling.yearsToFI).toBeLessThan(plain.yearsToFI)
+  })
+  it('does not change spending or the FI target', () => {
+    const plain = computeModel({ ...base })
+    const hustling = computeModel({ ...base, sideHustle: 12000 })
+    expect(hustling.annualSpending).toBe(plain.annualSpending)
+    expect(hustling.fiTarget).toBe(plain.fiTarget)
+  })
+})
+
+describe('FIRE variants', () => {
+  const variants = computeVariants({ ...base, sideHustle: 6000 })
+  const byKey = (k) => variants.find((v) => v.key === k)
+
+  it('returns the five known styles', () => {
+    expect(variants.map((v) => v.key)).toEqual(['standard', 'lean', 'fat', 'coast', 'barista'])
+  })
+  it('standard matches the headline engine', () => {
+    const headline = computeModel({ ...base, sideHustle: 6000 })
+    expect(byKey('standard').fiTarget).toBeCloseTo(headline.fiTarget, 6)
+    expect(byKey('standard').yearsToFI).toBeCloseTo(headline.yearsToFI, 6)
+  })
+  it('lean is faster than standard, fat is slower', () => {
+    expect(byKey('lean').yearsToFI).toBeLessThan(byKey('standard').yearsToFI)
+    expect(byKey('fat').yearsToFI).toBeGreaterThan(byKey('standard').yearsToFI)
+  })
+  it('coast number is smaller than the full FI number', () => {
+    expect(byKey('coast').fiTarget).toBeLessThan(byKey('standard').fiTarget)
+  })
+  it('barista needs a smaller pile when a side income covers part of spending', () => {
+    expect(byKey('barista').fiTarget).toBeLessThan(byKey('standard').fiTarget)
+    expect(byKey('barista').spending).toBeCloseTo(byKey('standard').spending - 6000, 6)
+  })
+})
+
+describe('one more year', () => {
+  const model = computeModel({ ...base, savingsRate: 0.5 })
+  const rows = oneMoreYearTable(model)
+
+  it('starts at the crossover with no buffer', () => {
+    expect(rows[0].offset).toBe(0)
+    expect(rows[0].bufferPct).toBeCloseTo(0, 6)
+  })
+  it('sustainable spending grows with each extra year', () => {
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i].sustainableSpend).toBeGreaterThan(rows[i - 1].sustainableSpend)
+    }
+  })
+  it('buffer above baseline spending widens each year', () => {
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i].bufferPct).toBeGreaterThan(rows[i - 1].bufferPct)
+    }
+  })
+  it('is empty when FI is unreachable', () => {
+    expect(oneMoreYearTable(computeModel({ ...base, savingsRate: 0 }))).toHaveLength(0)
+  })
+})
+
+describe('nominal restatement', () => {
+  it('is the identity at year zero', () => {
+    expect(toNominal(1000, 0, 0.03)).toBe(1000)
+  })
+  it('inflates by the compounded rate', () => {
+    expect(toNominal(1000, 10, 0.03)).toBeCloseTo(1000 * Math.pow(1.03, 10), 6)
   })
 })
 

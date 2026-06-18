@@ -16,7 +16,7 @@ export default function SavingsTable({ inputs }) {
   const currentPct = Math.round((savingsRate * 100) / 5) * 5
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-card sm:p-6">
+    <section className="rounded-2xl bg-paper p-5 shadow-card sm:p-6">
       <h2 className="text-lg font-semibold text-ink">Savings rate vs. years to FI</h2>
       <p className="mt-1 text-sm text-slatey">
         Starting from zero, using your assumptions ({(realReturn * 100).toFixed(1)}% real
@@ -24,9 +24,9 @@ export default function SavingsTable({ inputs }) {
         change the answer — only the <em>rate</em> does.
       </p>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+      <div className="mt-4 overflow-hidden rounded-xl border border-rule">
         <table className="w-full text-sm">
-          <thead className="bg-mist text-left text-xs uppercase tracking-wide text-slatey">
+          <thead className="bg-parchment text-left text-xs uppercase tracking-wide text-slatey">
             <tr>
               <th className="px-4 py-2 font-semibold">Savings rate</th>
               <th className="px-4 py-2 text-right font-semibold">Working years until FI</th>
@@ -41,7 +41,7 @@ export default function SavingsTable({ inputs }) {
                   className={
                     active
                       ? 'bg-target/10 font-semibold text-target'
-                      : 'odd:bg-white even:bg-slate-50/60 text-ink'
+                      : 'odd:bg-paper even:bg-parchment/40 text-ink'
                   }
                 >
                   <td className="px-4 py-2 tabular-nums">
