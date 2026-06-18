@@ -1,5 +1,5 @@
 {
-  "_comment": "Run a local production build first (npm run build && npm run preview), then `npx freshshot` to refresh the README hero shot.",
+  "_comment": "Run a local production build first (npm run build && npm run preview --port 4174), then `npx freshshot` to refresh the README screenshots.",
   "baseUrl": "http://localhost:4174",
   "outDir": "screenshots",
   "viewport": { "width": 1280, "height": 760 },
@@ -8,6 +8,34 @@
     {
       "name": "hero",
       "steps": [{ "goto": "/?p=75000&s=0.55&w=40000&h=8000&r=0.05&d=0.04" }],
+      "screenshot": { "fullPage": false, "animations": "disabled" }
+    },
+    {
+      "name": "variants",
+      "viewport": { "width": 1180, "height": 850 },
+      "steps": [
+        { "goto": "/?p=75000&s=0.6&w=60000&h=10000&a=34&g=60" },
+        { "eval": "[...document.querySelectorAll('h2')].find(h=>/Which FIRE/.test(h.textContent)).scrollIntoView({block:'start'});window.scrollBy(0,-24)" }
+      ],
+      "screenshot": { "fullPage": false, "animations": "disabled" }
+    },
+    {
+      "name": "onemore",
+      "viewport": { "width": 1180, "height": 850 },
+      "steps": [
+        { "goto": "/?p=75000&s=0.6&w=60000&h=10000" },
+        { "eval": "[...document.querySelectorAll('h2')].find(h=>/one more year/i.test(h.textContent)).scrollIntoView({block:'start'});window.scrollBy(0,-24)" }
+      ],
+      "screenshot": { "fullPage": false, "animations": "disabled" }
+    },
+    {
+      "name": "future-dollars",
+      "viewport": { "width": 1180, "height": 850 },
+      "steps": [
+        { "goto": "/?p=75000&s=0.55&w=40000&h=8000" },
+        { "eval": "[...document.querySelectorAll('button')].find(b=>/Future/.test(b.textContent)).click()" },
+        { "eval": "[...document.querySelectorAll('h2')].find(h=>/Net worth growth/i.test(h.textContent)).scrollIntoView({block:'start'});window.scrollBy(0,-24)" }
+      ],
       "screenshot": { "fullPage": false, "animations": "disabled" }
     }
   ]
